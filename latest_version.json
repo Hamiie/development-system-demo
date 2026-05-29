@@ -1,11 +1,11 @@
 {
-  "latest_version": "v0.5.17 local share",
+  "latest_version": "v0.5.18 local app update",
   "release_date": "2026-05-30",
+  "package_name": "Development_System_Local_App_v0_5_18.zip",
   "notes": [
-    "Hides the Streamlit Deploy control in the local app for a more finished local-only experience.",
-    "Fixes duplicate Streamlit button IDs in Settings by assigning explicit keys.",
-    "Keeps the v0.5.16 export folder structure: output/Tasklists, output/Google Calendar Exports, output/Google Tasks Exports, and output/Backups.",
-    "Google Tasks exports remain comma-delimited CSV files.",
-    "Update backup controls remain available before installing future releases."
+    "Clarifies that the app folder is replaceable and the Development folder is not.",
+    "Adds update-safe packaging notes and an Update Safety guide inside the local app package.",
+    "Release hub now has separate New installation and Update existing installation flows.",
+    "The local app package contains no live database, backups, Markdown folders, calendar exports, tasklists, or user data."
   ]
 }

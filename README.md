@@ -1,5 +1,22 @@
-# Development System Release Hub v4
+# Development System Release Hub v6
 
-Deploy this folder to Streamlit Community Cloud. Main file path: `app/main.py`.
+This repository is the Streamlit Community Cloud release hub for Development System.
 
-The downloadable local package is in `downloads/Development_System_Local_App_v0_5_17.zip`.
+It does not run the real local-file app. It provides:
+
+- a polished landing page
+- a download for the latest local Windows app package
+- separate flows for new users and existing users updating the app
+- clear safety wording that the app folder is replaceable, but the Development folder is not
+
+Deploy with Streamlit Community Cloud using:
+
+```text
+app/main.py
+```
+
+## Updating the local package
+
+Replace the zip inside `downloads/` and update `latest_version.json`.
+
+The local app package should not include user data, backups, Markdown folders, exports, tasklists, or a live database.
