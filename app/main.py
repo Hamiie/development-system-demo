@@ -117,7 +117,7 @@ with win_col:
     st.markdown("""
     <div class="download-panel">
       <h3>Windows</h3>
-      <p>Download the Windows package, extract it, then run the launcher builder once to create <strong>Pathmark.exe</strong>.</p>
+      <p>Download the Windows package, extract it, move <strong>Pathmark_app</strong> into your Pathmark folder, then run the launcher builder once to create <strong>Pathmark.exe</strong>.</p>
     </div>
     """, unsafe_allow_html=True)
     if windows_name and (DOWNLOADS / windows_name).exists():
@@ -131,13 +131,13 @@ with win_col:
         )
     else:
         st.error("The Windows package is missing from this release hub.")
-    st.caption("If the executable cannot be built, use Start Pathmark.cmd as the fallback launcher.")
+    st.caption("The builder creates Pathmark.exe with the Pathmark icon. Use Start Pathmark.cmd only as a fallback if needed.")
 
 with mac_col:
     st.markdown("""
     <div class="download-panel">
       <h3>Mac</h3>
-      <p>Download the Mac package, extract it, then open <strong>Start Pathmark.command</strong> from the local_app folder.</p>
+      <p>Download the Mac package, extract it, move <strong>Pathmark_app</strong> into your Pathmark folder, then open <strong>Start Pathmark.command</strong>.</p>
     </div>
     """, unsafe_allow_html=True)
     if mac_name and (DOWNLOADS / mac_name).exists():
@@ -151,7 +151,7 @@ with mac_col:
         )
     else:
         st.error("The Mac package is missing from this release hub.")
-    st.caption("The Mac package also includes an optional builder for creating a Start Pathmark.app launcher.")
+    st.caption("The Mac package includes Start Pathmark.command and an optional app-style launcher builder.")
 
 st.markdown("""
 <div class="notice">Pathmark runs on your computer so it can create tasklists, backups, calendar exports, Google Tasks exports, and planning files in the folder you choose.</div>
@@ -161,14 +161,14 @@ st.header("New installation")
 st.markdown("""
 1. Download the package for your computer.
 2. Extract the zip file.
-3. Start Pathmark from the extracted folder.
+3. Move the extracted <code>Pathmark_app</code> folder into your Pathmark folder, then start Pathmark from there.
 4. On first launch, choose where Pathmark should keep your system.
 5. Pathmark creates missing folders and files only. Existing files are not deleted.
 """)
 
 st.header("Updating safely")
 st.markdown("""
-<div class="safe-rule"><strong>The app folder is replaceable. Your Pathmark folder is not.</strong><br>Before updating, open your current local app and create an update backup. Then replace only the <code>local_app</code> folder.</div>
+<div class="safe-rule"><strong>The app folder is replaceable. Your Pathmark folder is not.</strong><br>Before updating, open your current Pathmark app and create an update backup. Then replace only the <code>Pathmark_app</code> folder.</div>
 """, unsafe_allow_html=True)
 
 st.header("Suggested organisation")
@@ -184,7 +184,7 @@ st.markdown("""
   02_Home_And_Garden/
   03_Making_And_Craft/
   ...
-  local_app/   ← replace this when updating</div>
+  Pathmark_app/   ← replace this when updating</div>
 """, unsafe_allow_html=True)
 
 st.header("Release notes")

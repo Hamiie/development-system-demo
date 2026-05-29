@@ -12,4 +12,4 @@ It should contain only:
 - `requirements.txt`
 - `.gitignore`
 
-The Windows package is build-first: users or maintainers run `build_launcher_exe.bat` inside the extracted local app package to create `Pathmark.exe`. The fallback launcher is `Start Pathmark.cmd`.
+The Windows package is build-first: users or maintainers run `build_launcher_exe.bat` inside the extracted Pathmark app package to create `Pathmark.exe`. The fallback launcher is `Start Pathmark.cmd`.
