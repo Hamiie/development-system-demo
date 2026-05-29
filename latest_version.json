@@ -1,11 +1,14 @@
 {
-  "latest_version": "v0.5.18 local app update",
+  "latest_version": "v0.5.19 local app update",
   "release_date": "2026-05-30",
-  "package_name": "Development_System_Local_App_v0_5_18.zip",
+  "package_name": "Development_System_Local_App_v0_5_19.zip",
   "notes": [
-    "Clarifies that the app folder is replaceable and the Development folder is not.",
-    "Adds update-safe packaging notes and an Update Safety guide inside the local app package.",
-    "Release hub now has separate New installation and Update existing installation flows.",
-    "The local app package contains no live database, backups, Markdown folders, calendar exports, tasklists, or user data."
+    "Exports and backups now live under 00_System rather than local_app/output.",
+    "Tasklists write to 00_System/Tasklists.",
+    "Google Calendar ICS files write to 00_System/Google Calendar Exports.",
+    "Google Tasks CSV files write to 00_System/Google Tasks Exports.",
+    "Backups write to 00_System/Backups.",
+    "Existing older local_app/output settings are migrated to persistent 00_System folders.",
+    "The export pages have been simplified to reduce duplicate open-file/open-folder controls."
   ]
 }

@@ -95,15 +95,15 @@ with update_tab:
         """
 **The app folder is replaceable. The Development folder is not.**
 
-Your personal data should live outside the update package, for example:
+Your personal data and generated outputs should live outside the replaceable app folder, for example:
 
 ```text
 Development/
     00_System/
         Backups/
-    CalendarExports/
-    GoogleTasksExports/
-    Tasklists/
+        Google Calendar Exports/
+        Google Tasks Exports/
+        Tasklists/
     01_Body_And_Stability/
     02_Home_And_Garden/
     ...
@@ -157,9 +157,9 @@ Development/
         DEV_DASHBOARD.md
         SYSTEM_GUIDE.md
         Backups/
-    CalendarExports/
-    GoogleTasksExports/
-    Tasklists/
+        Google Calendar Exports/
+        Google Tasks Exports/
+        Tasklists/
     01_Body_And_Stability/
     02_Home_And_Garden/
     03_Making_And_Craft/
