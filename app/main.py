@@ -9,7 +9,7 @@ import streamlit as st
 ROOT = Path(__file__).resolve().parents[1]
 DOWNLOADS = ROOT / "downloads"
 VERSION_FILE = ROOT / "latest_version.json"
-LOCAL_PACKAGE = DOWNLOADS / "Development_System_Local_App_v0_5_15.zip"
+LOCAL_PACKAGE = DOWNLOADS / "Development_System_Local_App_v0_5_15_launcher_v3_with_exe.zip"
 
 st.set_page_config(
     page_title="Development System",
@@ -47,7 +47,7 @@ st.divider()
 
 st.header("Download the local app")
 st.write(
-    "Download the Windows package, extract it, then start the local app. It will open in your browser at a local address such as `localhost`."
+    "Download the Windows package, extract it, then start the local app. The launcher executable shows a progress bar and plain-language status updates, then opens the app in your browser at a local address such as `localhost`."
 )
 
 if LOCAL_PACKAGE.exists():
@@ -66,8 +66,8 @@ with st.expander("How to use the local app", expanded=True):
         """
 1. Download the local app zip.
 2. Extract the zip somewhere sensible, such as Documents.
-3. Double-click **Start Development System.cmd**.
-4. The launcher checks Python, installs requirements if needed, then opens the app locally in your browser.
+3. Double-click **Start Development System.exe**. If Windows blocks the executable or it does not start, use **Start Development System.cmd** as the fallback.
+4. A friendly launcher opens with a progress bar and status updates while it checks Python, prepares the local environment, installs requirements if needed, and opens the app locally in your browser.
 5. On first run, choose where your Development folder should live.
 
 The local app can then create and update folders, Markdown files, backups, Google Calendar exports, and Google Tasks CSV exports on your computer.
