@@ -1,45 +1,15 @@
 # Pathmark Release Hub
 
-This repository deploys the Streamlit release hub for Pathmark.
+This repository is the Streamlit release hub for Pathmark.
 
-Deploy with Streamlit Community Cloud using:
+It should contain only:
 
-```text
-app/main.py
-```
+- `app/`
+- `downloads/`
+- `.streamlit/`
+- `README.md`
+- `latest_version.json`
+- `requirements.txt`
+- `.gitignore`
 
-## Repository contents
-
-```text
-app/
-downloads/
-.streamlit/
-README.md
-latest_version.json
-requirements.txt
-.gitignore
-```
-
-## Downloads
-
-The `downloads/` folder contains the Windows and Mac local app packages shown on the release hub.
-
-The Windows package intentionally does not include a prebuilt `.exe`. After downloading and extracting the Windows package, run:
-
-```text
-build_launcher_exe.bat
-```
-
-This creates:
-
-```text
-Start Pathmark.exe
-```
-
-The fallback launcher is:
-
-```text
-Start Pathmark.cmd
-```
-
-The Mac package includes `Start Pathmark.command` and an optional `Build Pathmark Launcher App.command` for building a local `.app` launcher on macOS.
+The Windows package is build-first: users or maintainers run `build_launcher_exe.bat` inside the extracted local app package to create `Pathmark.exe`. The fallback launcher is `Start Pathmark.cmd`.

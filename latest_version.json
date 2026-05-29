@@ -1,13 +1,13 @@
 {
   "app_name": "Pathmark",
-  "version": "v0.5.29",
+  "version": "v0.5.30",
   "release_date": "2026-05-30",
-  "windows_package": "Pathmark_Local_App_Windows_v0_5_29_BUILD_FIRST.zip",
-  "mac_package": "Pathmark_Local_App_Mac_v0_5_29.zip",
+  "windows_package": "Pathmark_Local_App_Windows_v0_5_30_BUILD_FIRST.zip",
+  "mac_package": "Pathmark_Local_App_Mac_v0_5_30.zip",
   "notes": [
-    "Removes stale prebuilt Windows executable from the download package.",
-    "Clarifies that Windows users should run build_launcher_exe.bat first to create Start Pathmark.exe.",
-    "Keeps Start Pathmark.cmd as the fallback launcher.",
-    "Keeps user data outside the replaceable local_app folder."
+    "Refreshes the release hub home page with a cleaner product layout.",
+    "Keeps the Seasonal theme and replaces the previous non-seasonal themes with Orchid, Harbour, Ember, and Sage.",
+    "Windows launcher now builds Pathmark.exe rather than Start Pathmark.exe.",
+    "No stale prebuilt Windows executable is included in the source package."
   ]
 }
