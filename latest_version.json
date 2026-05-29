@@ -1,10 +1,11 @@
 {
-  "latest_version": "v0.5.15 local share launcher v3 with EXE",
-  "release_date": "2026-05-27",
+  "latest_version": "v0.5.16 local share",
+  "release_date": "2026-05-30",
   "notes": [
-    "Includes the compiled Start Development System.exe launcher in the downloadable local app package.",
-    "Shows a progress bar and plain-language status updates instead of raw command output.",
-    "Keeps Start Development System.cmd as a fallback launcher.",
-    "Keeps the local-first workflow for Markdown, backups, CalendarExports, and GoogleTasksExports."
+    "Exports now use output/Tasklists, output/Google Calendar Exports, output/Google Tasks Exports, and output/Backups.",
+    "Latest export buttons remain available after export.",
+    "Google Tasks exports are comma-delimited CSV files again.",
+    "The app includes update backup controls before installing future releases.",
+    "The launcher source includes a Check for updates button; rebuild the EXE on Windows to include the launcher UI change."
   ]
 }

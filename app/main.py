@@ -9,7 +9,7 @@ import streamlit as st
 ROOT = Path(__file__).resolve().parents[1]
 DOWNLOADS = ROOT / "downloads"
 VERSION_FILE = ROOT / "latest_version.json"
-LOCAL_PACKAGE = DOWNLOADS / "Development_System_Local_App_v0_5_15_launcher_v3_with_exe.zip"
+LOCAL_PACKAGE = DOWNLOADS / "Development_System_Local_App_v0_5_16.zip"
 
 st.set_page_config(
     page_title="Development System",
@@ -117,7 +117,7 @@ st.divider()
 
 st.header("Updates")
 st.write(
-    "Return to this page to download newer local app packages. Before updating, create a backup from Settings inside the local app."
+    "Return to this page to download newer local app packages. Before updating, use Settings → Create update backup inside the local app. You can restore a database backup from Settings if needed."
 )
 
 notes = version.get("notes", [])
