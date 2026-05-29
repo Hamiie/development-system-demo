@@ -1,17 +1,13 @@
 {
-  "latest_version": "v0.5.27 Pathmark local package",
-  "release_date": "2026-05-30",
-  "package_name": "Pathmark_Local_App_v0_5_27_BUILD_FIRST.zip",
-  "notes": [
-    "Renames the product from Clearway/Wayline to Pathmark.",
-    "Keeps the release hub user-facing and avoids build/publishing language on the homepage.",
-    "Includes the Pathmark local package in the release hub downloads folder.",
-    "The local package is build-first: run build_launcher_exe.bat after extraction to create Start Pathmark.exe.",
-    "Uses Documents\\Pathmark as the recommended folder for new users while allowing existing folders to be selected."
-  ],
   "app_name": "Pathmark",
-  "version": "v0.5.27",
-  "download_file": "Pathmark_Local_App_v0_5_27_BUILD_FIRST.zip",
-  "download_label": "Download Pathmark for Windows",
-  "streamlit_subdomain": "pathmark"
+  "version": "v0.5.29",
+  "release_date": "2026-05-30",
+  "windows_package": "Pathmark_Local_App_Windows_v0_5_29_BUILD_FIRST.zip",
+  "mac_package": "Pathmark_Local_App_Mac_v0_5_29.zip",
+  "notes": [
+    "Removes stale prebuilt Windows executable from the download package.",
+    "Clarifies that Windows users should run build_launcher_exe.bat first to create Start Pathmark.exe.",
+    "Keeps Start Pathmark.cmd as the fallback launcher.",
+    "Keeps user data outside the replaceable local_app folder."
+  ]
 }

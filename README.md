@@ -1,8 +1,6 @@
 # Pathmark Release Hub
 
-This repository deploys the public Streamlit release hub for Pathmark.
-
-Pathmark helps users make time for routines, reduce friction with useful prompts, and keep goals moving. The hosted Streamlit page is the download and update hub; the working app is downloaded and run locally so it can create tasklists, backups, calendar exports, Google Tasks exports, and planning files in the folder the user chooses.
+This repository deploys the Streamlit release hub for Pathmark.
 
 Deploy with Streamlit Community Cloud using:
 
@@ -22,10 +20,26 @@ requirements.txt
 .gitignore
 ```
 
-## Local package
+## Downloads
 
-The downloadable Pathmark package lives in `downloads/`.
+The `downloads/` folder contains the Windows and Mac local app packages shown on the release hub.
 
-The local package is build-first: it includes `build_launcher_exe.bat`. Run that inside the extracted local package to create `Start Pathmark.exe`. The included `Start Pathmark.cmd` remains available as a fallback launcher.
+The Windows package intentionally does not include a prebuilt `.exe`. After downloading and extracting the Windows package, run:
 
-Do not include an old compiled launcher in the source package. Build the launcher from the current source before preparing a new release download.
+```text
+build_launcher_exe.bat
+```
+
+This creates:
+
+```text
+Start Pathmark.exe
+```
+
+The fallback launcher is:
+
+```text
+Start Pathmark.cmd
+```
+
+The Mac package includes `Start Pathmark.command` and an optional `Build Pathmark Launcher App.command` for building a local `.app` launcher on macOS.
