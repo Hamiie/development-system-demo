@@ -1,14 +1,14 @@
 {
   "app_name": "Pathmark",
-  "version": "v0.5.46",
+  "version": "v0.5.49",
   "release_date": "2026-05-30",
-  "windows_package": "Pathmark_Local_App_Windows_v0_5_46.zip",
+  "windows_package": "Pathmark_Local_App_Windows_v0_5_49.zip",
+  "mac_package": "",
   "notes": [
-    "The Windows launcher is now a scrollable workflow aligned more closely with the Pathmark homepage.",
-    "The first-launch pop-up has been removed; workspace guidance now appears inside the launcher.",
-    "The launcher no longer auto-starts before the user can review the workspace and theme.",
-    "The launcher keeps one Update action, which creates an update backup and opens the update hub.",
-    "Installation wording now puts Pathmark_app directly in Documents while keeping user files in Documents\\Workspace by default."
-  ],
-  "mac_package": ""
+    "Area detection now requires numbered folders such as 01_Body_And_Stability and ignores unnumbered folders.",
+    "Older auto-imported Areas from unnumbered folders are archived automatically without deleting files.",
+    "Default theme button text contrast has been strengthened.",
+    "Launcher theme controls now use rounded pill buttons rather than square dropdowns.",
+    "Homepage wording has been tightened around download, install, and update only."
+  ]
 }
