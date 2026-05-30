@@ -39,7 +39,6 @@ CSS = """
   --accent: #334E68;
   --accent-2: #7A4E7A;
   --accent-soft: #E7EEF4;
-  --warm: #A66A43;
   --shadow: rgba(31,34,33,.10);
 }
 html, body, [data-testid="stAppViewContainer"] {
@@ -54,7 +53,6 @@ p, li { font-size: 1.02rem; line-height: 1.62; }
 .hero h1 { font-size: clamp(3.7rem, 8.2vw, 7.2rem); line-height: .84; margin: 0 0 1rem 0; letter-spacing: -.085em; }
 .lead { color: var(--ink); font-size: clamp(1.45rem, 3vw, 2.3rem); line-height: 1.18; max-width: 920px; font-weight: 680; margin: 0; }
 .sublead { color: var(--muted); font-size: 1.18rem; max-width: 820px; margin-top: 1.15rem; }
-.hero-actions { margin-top: 1.4rem; display: flex; gap: .8rem; flex-wrap: wrap; }
 .grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin: 1.2rem 0 2rem; }
 .card { background: rgba(255,255,255,.88); border: 1px solid var(--line); border-radius: 1.35rem; padding: 1.25rem; box-shadow: 0 14px 34px var(--shadow); }
 .card h3 { margin-top: 0; margin-bottom: .55rem; }
@@ -65,14 +63,13 @@ p, li { font-size: 1.02rem; line-height: 1.62; }
 .meta-card { background: rgba(255,255,255,.80); border: 1px solid var(--line); border-radius: 1.25rem; padding: 1rem 1.15rem; box-shadow: 0 10px 26px var(--shadow); }
 .meta-label { color: var(--muted); font-size: .92rem; font-weight: 700; margin-bottom: .35rem; }
 .meta-value { color: var(--ink); font-size: 1.9rem; line-height: 1.05; font-weight: 780; letter-spacing: -.045em; }
-.download-panel { background: rgba(255,255,255,.70); border: 1px solid var(--line); border-radius: 1.25rem; padding: 1rem 1.1rem; margin-bottom: .75rem; min-height: 8.3rem; }
+.download-panel { background: rgba(255,255,255,.70); border: 1px solid var(--line); border-radius: 1.25rem; padding: 1rem 1.1rem; margin-bottom: .75rem; }
 .download-panel h3 { margin: 0 0 .45rem 0; }
 .download-panel p { color: var(--muted); margin-bottom: 0; }
-.small { color: var(--muted); font-size: .95rem; }
 .safe-rule { background: var(--surface-2); border: 1px solid var(--line); border-radius: 1.1rem; padding: 1rem 1.1rem; }
 .stDownloadButton button, .stButton button { border-radius: .85rem !important; min-height: 3rem; font-weight: 700 !important; }
 [data-testid="stHeader"] { background: transparent; }
-@media (max-width: 860px) { .grid-3 { grid-template-columns: 1fr; } }
+@media (max-width: 860px) { .grid-3, .meta-grid { grid-template-columns: 1fr; } }
 </style>
 """
 st.markdown(CSS, unsafe_allow_html=True)
@@ -84,14 +81,29 @@ def load_version() -> dict:
     return {"app_name": "Pathmark", "version": "unknown", "release_date": "unknown", "notes": []}
 
 
-def bytes_for(name: str) -> bytes:
-    path = DOWNLOADS / name
-    return path.read_bytes() if path.exists() else b""
+def find_windows_package(configured_name: str | None) -> Path | None:
+    """Find the Windows package safely.
+
+    The configured filename is used first. If it is missing, the release hub falls
+    back to the newest-looking Windows package in downloads/. This prevents the
+    public download page from showing a false missing-package warning when only
+    the package filename has changed.
+    """
+    if configured_name:
+        configured_path = DOWNLOADS / configured_name
+        if configured_path.exists():
+            return configured_path
+
+    candidates = sorted(
+        DOWNLOADS.glob("Pathmark_Local_App_Windows*.zip"),
+        key=lambda path: path.stat().st_mtime,
+        reverse=True,
+    )
+    return candidates[0] if candidates else None
 
 
 version = load_version()
-windows_name = version.get("windows_package", "")
-mac_name = version.get("mac_package", "")
+windows_package = find_windows_package(version.get("windows_package", ""))
 
 if ICON_PATH.exists():
     st.image(str(ICON_PATH), width=54)
@@ -131,46 +143,26 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-win_col, mac_col = st.columns(2)
-with win_col:
-    st.markdown("""
-    <div class="download-panel">
-      <h3>Windows</h3>
-      <p>Download the Windows package, extract it, move <strong>Pathmark_app</strong> into your Pathmark folder, then run the launcher builder once to create the updated <strong>Pathmark.exe</strong> launcher.</p>
-    </div>
-    """, unsafe_allow_html=True)
-    if windows_name and (DOWNLOADS / windows_name).exists():
-        st.download_button(
-            "Download Pathmark for Windows",
-            data=bytes_for(windows_name),
-            file_name=windows_name,
-            mime="application/zip",
-            use_container_width=True,
-            key="download_windows",
-        )
-    else:
-        st.error("The Windows package is missing from this release hub.")
-    st.caption("The builder creates the current Pathmark.exe launcher with the Pathmark icon. Delete any old Pathmark.exe before rebuilding.")
+st.markdown("""
+<div class="download-panel">
+  <h3>Windows</h3>
+  <p>Download the Windows package, extract it, move <strong>Pathmark_app</strong> into your <strong>Documents\\Pathmark</strong> folder, then run the launcher builder once to create the updated <strong>Pathmark.exe</strong> launcher.</p>
+</div>
+""", unsafe_allow_html=True)
 
-with mac_col:
-    st.markdown("""
-    <div class="download-panel">
-      <h3>Mac</h3>
-      <p>Download the Mac package, extract it, move <strong>Pathmark_app</strong> into your Pathmark folder, then open <strong>Start Pathmark.command</strong>.</p>
-    </div>
-    """, unsafe_allow_html=True)
-    if mac_name and (DOWNLOADS / mac_name).exists():
-        st.download_button(
-            "Download Pathmark for Mac",
-            data=bytes_for(mac_name),
-            file_name=mac_name,
-            mime="application/zip",
-            use_container_width=True,
-            key="download_mac",
-        )
-    else:
-        st.error("The Mac package is missing from this release hub.")
-    st.caption("The Mac package includes Start Pathmark.command and an optional app-style launcher builder.")
+if windows_package is not None:
+    st.download_button(
+        "Download Pathmark for Windows",
+        data=windows_package.read_bytes(),
+        file_name=windows_package.name,
+        mime="application/zip",
+        use_container_width=True,
+        key="download_windows",
+    )
+else:
+    st.error("The Windows package is missing from this release hub. Check that a file named Pathmark_Local_App_Windows_v*.zip exists in the downloads folder.")
+
+st.caption("This release is Windows-only for now. Mac package support has been removed while the Windows folder, backup, and update workflow is stabilised.")
 
 st.markdown("""
 <div class="notice">Pathmark runs on your computer so it can create tasklists, backups, calendar exports, Google Tasks exports, and planning files in the folder you choose.</div>
@@ -178,9 +170,9 @@ st.markdown("""
 
 st.header("New installation")
 st.markdown("""
-1. Download the package for your computer.
+1. Download the Windows package.
 2. Extract the zip file.
-3. Move the extracted <code>Pathmark_app</code> folder into your Pathmark folder, then start Pathmark from there.
+3. Move the extracted <code>Pathmark_app</code> folder into your <code>Documents\\Pathmark</code> folder, then start Pathmark from there.
 4. On first launch, choose where Pathmark should keep your system.
 5. Pathmark creates missing folders and files only. Existing files are not deleted.
 """)
