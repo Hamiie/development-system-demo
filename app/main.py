@@ -110,10 +110,27 @@ if ICON_PATH.exists():
 
 st.markdown("""
 <div class="hero">
-  <div class="eyebrow">Routines, prompts, and goal progress</div>
+  <div class="eyebrow">Local planning app for routines, prompts, and projects</div>
   <h1>Pathmark</h1>
-  <p class="lead">Make time for routines. Reduce friction with prompts. Keep goals moving.</p>
-  <p class="sublead">Download the Windows local app, keep the replaceable app folder separate, and choose a Workspace folder for your projects and exports when the launcher opens.</p>
+  <p class="lead">A calm place to turn goals into routines, next actions, calendar blocks, and starting prompts.</p>
+  <p class="sublead">Pathmark runs locally on your Windows computer. Your Workspace folder stays yours: it holds your projects, numbered Areas, exports, tasklists, backups, and local database.</p>
+</div>
+""", unsafe_allow_html=True)
+
+st.markdown("""
+<div class="grid-3">
+  <div class="card">
+    <h3>Plan the work</h3>
+    <p>Group goals and routines into numbered Areas so your folder system, app views, and exports stay aligned.</p>
+  </div>
+  <div class="card">
+    <h3>Prompt the first step</h3>
+    <p>Create Google Tasks prompts that tell you exactly how to begin, instead of leaving each task as a vague intention.</p>
+  </div>
+  <div class="card">
+    <h3>Export cleanly</h3>
+    <p>Prepare calendar blocks, tasklists, and backups in one Workspace so updates do not disturb your own files.</p>
+  </div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -134,7 +151,7 @@ st.markdown(f"""
 st.markdown("""
 <div class="download-panel">
   <h3>Windows local app</h3>
-  <p>Download the package, extract it, move <strong>Pathmark_app</strong> directly into <strong>Documents</strong>, then run <strong>build_launcher_exe.bat</strong> once. Open <strong>Pathmark.exe</strong> and choose your Workspace before opening the app.</p>
+  <p>Download the package, extract it, move <strong>Pathmark_app</strong> directly into <strong>Documents</strong>, then run <strong>build_launcher_exe.bat</strong> once. The launcher lets you review the Workspace and theme before opening the app.</p>
 </div>
 """, unsafe_allow_html=True)
 
