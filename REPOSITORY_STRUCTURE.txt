@@ -8,6 +8,6 @@ app/
   assets/
     pathmark.png
 downloads/
-  Pathmark_Local_App_Windows_v0_5_44.zip
+  Pathmark_Local_App_Windows_v0_5_46.zip
 .streamlit/
   config.toml

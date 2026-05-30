@@ -146,7 +146,7 @@ st.markdown(f"""
 st.markdown("""
 <div class="download-panel">
   <h3>Windows</h3>
-  <p>Download the Windows package, extract it, move <strong>Pathmark_app</strong> to a stable app location such as <strong>Documents\\Pathmark App</strong>, then run the launcher builder once to create the updated <strong>Pathmark.exe</strong> launcher. The launcher will create or select the separate <strong>Documents\\Pathmark</strong> workspace for projects and exports.</p>
+  <p>Download the Windows package, extract it, move <strong>Pathmark_app</strong> directly into <strong>Documents</strong>, then run the launcher builder once to create the updated <strong>Pathmark.exe</strong> launcher. The launcher uses the separate <strong>Documents\\Workspace</strong> folder for projects and exports by default, or you can choose an existing workspace folder before opening the app.</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -172,37 +172,17 @@ st.header("New installation")
 st.markdown("""
 1. Download the Windows package.
 2. Extract the zip file.
-3. Create or choose a stable app location. For example, <code>Documents\\Pathmark App</code>. Avoid leaving the app in Downloads for normal use.
-4. Move the extracted <code>Pathmark_app</code> folder into that app location.
-5. Open <code>Pathmark_app</code> and run <code>build_launcher_exe.bat</code> once to create <code>Pathmark.exe</code>.
-6. Open <code>Pathmark.exe</code>. The launcher can create <code>Documents\\Pathmark</code> for you, or you can choose another Pathmark workspace folder.
-7. This workspace folder is where Pathmark keeps projects, area folders, calendar exports, Google Tasks exports, tasklists, backups, and the local database.
+3. Move the extracted `Pathmark_app` folder into your Documents folder. Avoid leaving the app in Downloads for normal use.
+4. Open `Pathmark_app` and run `build_launcher_exe.bat` once to create `Pathmark.exe`.
+5. Open `Pathmark.exe`. Review the workspace field before opening the app. The default workspace is `Documents\\Workspace`, or you can choose an existing folder.
+6. This workspace folder is where Pathmark keeps projects, area folders, calendar exports, Google Tasks exports, tasklists, backups, and the local database.
 """)
 
 st.header("Updating safely")
 st.markdown("""
-<div class="safe-rule"><strong>The app folder is replaceable. Your Workspace folder is not.</strong><br>Before updating, open the launcher and choose <strong>Update</strong>. Then replace only the <code>Pathmark_app</code> folder in your app location. Do not replace <code>Documents\\Pathmark</code> or the workspace folder you selected.</div>
+<div class="safe-rule"><strong>The app folder is replaceable. Your Workspace folder is not.</strong><br>Before updating, open the launcher and choose <strong>Update</strong>. Then replace only the <code>Pathmark_app</code> folder in Documents. Do not replace your <code>Documents\\Workspace</code> folder or the workspace folder you selected.</div>
 """, unsafe_allow_html=True)
 
-st.header("Suggested organisation")
-st.markdown("""
-<div class="path-box">Documents/
-  Pathmark App/
-    Pathmark_app/   ← replace this when updating
-
-Documents/
-  Pathmark/         ← user workspace
-    00_System/
-      pathmark.db
-      Backups/
-      Tasklists/
-      Google Calendar Exports/
-      Google Tasks Exports/
-    01_Body_And_Stability/
-    02_Home_And_Garden/
-    03_Making_And_Craft/
-    ...</div>
-""", unsafe_allow_html=True)
 
 st.header("Release notes")
 for note in version.get("notes", []):
