@@ -1,15 +1,14 @@
 {
   "app_name": "Pathmark",
-  "version": "v0.5.60",
+  "version": "v0.5.61",
   "release_date": "2026-05-30",
-  "windows_package": "Pathmark_Local_App_Windows_v0_5_60.zip",
+  "windows_package": "Pathmark_Local_App_Windows_v0_5_61.zip",
   "mac_package": "",
   "notes": [
-    "Simplified the launcher so setup focuses on choosing the Workspace and checking for updates.",
-    "Theme choice now happens inside the app rather than in the launcher.",
-    "Reordered the app sidebar to support the workflow: Home, Review Queue, Areas, Routines, Goals, Tasklist, exports, and Settings.",
-    "Simplified Areas and Specific area handling so Pathmark quietly maintains Workspace folders and Markdown files when goals and routines are saved.",
-    "Reframed standard routines as optional suggested starter routines for system support and wellbeing.",
-    "Tightened Review Queue filtering so unnumbered and system folders are ignored."
+    "Added an On-the-go tab to the hosted release hub for capturing pending goal, routine, task prompt, and calendar block updates.",
+    "Added a local On-the-go Updates page for connecting to a user-owned Google Sheet and reviewing pending updates before importing them into the Workspace.",
+    "Added user-owned Google Sheet sync settings stored inside the Workspace system folder.",
+    "On-the-go imports can create captured goals, active routines, staged Google Tasks prompts, or staged calendar blocks after user review.",
+    "Added CSV fallback for on-the-go updates when direct hosted Google Sheet writing is not configured yet."
   ]
 }
