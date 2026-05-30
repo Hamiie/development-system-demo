@@ -1,0 +1,12 @@
+Pathmark release hub repository structure
+
+Upload these items to the GitHub repository root:
+
+app/main.py
+downloads/Pathmark_Local_App_Windows_v0_5_33_BUILD_FIRST.zip
+downloads/Pathmark_Local_App_Mac_v0_5_33.zip
+.streamlit/config.toml
+README.md
+latest_version.json
+requirements.txt
+.gitignore

@@ -1,13 +1,13 @@
 {
   "app_name": "Pathmark",
-  "version": "v0.5.32",
+  "version": "v0.5.33",
   "release_date": "2026-05-30",
-  "windows_package": "Pathmark_Local_App_Windows_v0_5_32_BUILD_FIRST.zip",
-  "mac_package": "Pathmark_Local_App_Mac_v0_5_32.zip",
+  "windows_package": "Pathmark_Local_App_Windows_v0_5_33_BUILD_FIRST.zip",
+  "mac_package": "Pathmark_Local_App_Mac_v0_5_33.zip",
   "notes": [
-    "Renamed the replaceable app folder from local_app to Pathmark_app.",
-    "Updated setup and update instructions to make the folder structure clearer.",
-    "Updated the launcher window to use the same Pathmark icon artwork as the executable.",
-    "Adjusted the Pathmark icon source for better taskbar/icon scaling."
+    "Rebuilt the complete release hub using the correct GitHub repository folder structure.",
+    "Includes the Windows and Mac Pathmark_app download packages in the downloads folder.",
+    "Fixes the launcher update link so it opens https://pathmark.streamlit.app/.",
+    "Keeps Pathmark_app as the replaceable app folder name."
   ]
 }
