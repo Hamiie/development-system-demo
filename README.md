@@ -31,7 +31,7 @@ The launcher creates or points to the workspace folder on first launch. The work
 
 ## Hosted login and role setup
 
-Public visitors can download Pathmark without logging in. Beta and developer features are hidden unless the user signs in and has an allowed role. Unknown signed-in users default to `standard`.
+Visitors can download Pathmark without logging in. Beta and developer features are hidden unless the user signs in and has an allowed role. Unknown signed-in users default to `standard`.
 
 Developer access should be bootstrapped through Streamlit secrets, not hard-coded into the public repository:
 
@@ -75,9 +75,9 @@ The Google Cloud OAuth client should be a **Web application** with the Streamlit
 
 Mac support has been removed for now.
 
-## v0.5.67 focus
+## v0.5.68 focus
 
-This release tightens the hosted login and beta-access model before wider testing. Developer bootstrap emails now live in Streamlit secrets rather than public source code, beta/developer access requires a verified email claim, and Google Sheets sync is centred on app-created Pathmark sync sheets.
+This release tightens the hosted login and beta-access model before wider testing. Developer bootstrap emails now live in Streamlit secrets rather than source code, beta/developer access requires a verified email claim, and Google Sheets sync is centred on app-created Pathmark sync sheets.
 
 
 ## On-the-go Google Sheets sync
@@ -87,6 +87,11 @@ Pathmark uses user-authorised OAuth for Google Sheets sync. The hosted app and d
 
 ## Hosted login setup
 
-The public homepage remains available without signing in. Beta and developer tools appear only after Streamlit OIDC login is configured in deployment secrets and the signed-in user has the appropriate role. If `[auth]` is not configured, the page shows a visible disabled login control and remains in download-only mode.
+The download homepage remains available without signing in. Beta and developer tools appear only after Streamlit OIDC login is configured in deployment secrets and the signed-in user has the appropriate role. If `[auth]` is not configured, the page shows a visible disabled login control and remains in download-only mode.
 
 Required Streamlit authentication settings include `[auth]` values such as `redirect_uri`, `cookie_secret`, `client_id`, `client_secret`, and `server_metadata_url`. Developer bootstrap emails should be stored under `[pathmark_access]`, not hard-coded in the repository.
+
+
+## v0.5.68 focus
+
+This release fixes hosted login installation by using `streamlit[auth]` in `requirements.txt`, removes the misleading empty bar above the account panel, and changes the logged-out label from `public` to `download only`.

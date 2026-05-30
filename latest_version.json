@@ -1,15 +1,13 @@
 {
   "app_name": "Pathmark",
-  "version": "v0.5.67",
+  "version": "v0.5.68",
   "release_date": "2026-05-31",
-  "windows_package": "Pathmark_Local_App_Windows_v0_5_67.zip",
+  "windows_package": "Pathmark_Local_App_Windows_v0_5_68.zip",
   "mac_package": "",
   "notes": [
-    "Made hosted Google login controls visible at the top of the homepage and added clearer messaging when Streamlit [auth] secrets are not configured.",
-    "Moved developer bootstrap emails out of public source code and into Streamlit secrets.",
-    "Protected beta and developer features now require a verified email claim from login.",
-    "Made app-created Pathmark sync sheets the primary Google Sheets OAuth workflow.",
-    "Moved existing sync sheet entry into an advanced section for testing only.",
-    "Clarified that the role store contains access records only, not user planning data."
+    "Changed hosted Streamlit dependency to streamlit[auth] so st.login() installs the required Authlib authentication extra.",
+    "Removed the empty input-like bar above the login panel by replacing the custom HTML wrapper with a native Streamlit bordered container.",
+    "Changed logged-out status wording from public to download only, so it is clear this refers to page access rather than user data.",
+    "Kept beta/developer tools hidden unless the signed-in user has a verified email and the appropriate role."
   ]
 }

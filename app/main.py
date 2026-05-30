@@ -298,46 +298,40 @@ def maybe_record_login(email: str, role: str, status: str) -> None:
 
 
 def render_account_bar(role: str, user: dict[str, str]) -> None:
-    """Render the hosted account controls prominently.
-
-    Public visitors can still download Pathmark. Sign-in controls are shown
-    clearly at the top of the page so beta/developer users know where to start.
-    """
+    """Render account controls without using a fake input-like wrapper."""
     configured = login_configured()
-    st.markdown("<div class='card' style='padding: .95rem 1rem; margin-bottom: 1rem;'>", unsafe_allow_html=True)
-    cols = st.columns([1.35, 1.1, 3.55])
-    with cols[0]:
-        if user.get("email"):
-            if st.button("Log out", use_container_width=True):
-                try:
-                    st.logout()
-                except Exception as exc:
-                    st.warning(f"Could not log out: {exc}")
-        elif configured:
-            if st.button("Log in with Google", use_container_width=True):
-                try:
-                    st.login()
-                except Exception as exc:
-                    st.warning(f"Login is not configured correctly yet: {exc}")
-        else:
-            st.button("Log in not configured", use_container_width=True, disabled=True)
-    with cols[1]:
-        if user.get("email"):
-            st.markdown(f"<span class='profile-pill'>{role}</span>", unsafe_allow_html=True)
-        elif configured:
-            st.markdown("<span class='profile-pill'>public</span>", unsafe_allow_html=True)
-        else:
-            st.markdown("<span class='profile-pill'>download only</span>", unsafe_allow_html=True)
-    with cols[2]:
-        if user.get("email"):
-            verified_note = "verified" if user.get("email_verified") else "email not verified"
-            st.caption(f"Signed in as {user.get('email')} ({verified_note}). Role: {role}.")
-        elif configured:
-            st.caption("Log in with Google to access beta or developer features. Public visitors can download Pathmark without signing in.")
-        else:
-            st.caption("Login has not been configured in Streamlit secrets yet. Public download mode is available; beta/developer tools will appear here after [auth] is configured.")
-    st.markdown("</div>", unsafe_allow_html=True)
-
+    with st.container(border=True):
+        cols = st.columns([1.25, 1.2, 3.8])
+        with cols[0]:
+            if user.get("email"):
+                if st.button("Log out", use_container_width=True):
+                    try:
+                        st.logout()
+                    except Exception as exc:
+                        st.warning(f"Could not log out: {exc}")
+            elif configured:
+                if st.button("Log in with Google", use_container_width=True):
+                    try:
+                        st.login()
+                    except Exception as exc:
+                        st.warning(f"Login is not configured correctly yet: {exc}")
+            else:
+                st.button("Log in not configured", use_container_width=True, disabled=True)
+        with cols[1]:
+            if user.get("email"):
+                st.markdown(f"<span class='profile-pill'>{role}</span>", unsafe_allow_html=True)
+            elif configured:
+                st.markdown("<span class='profile-pill'>download only</span>", unsafe_allow_html=True)
+            else:
+                st.markdown("<span class='profile-pill'>download only</span>", unsafe_allow_html=True)
+        with cols[2]:
+            if user.get("email"):
+                verified_note = "verified" if user.get("email_verified") else "email not verified"
+                st.caption(f"Signed in as {user.get('email')} ({verified_note}). Role: {role}.")
+            elif configured:
+                st.caption("Log in with Google to access beta or developer features. Visitors can download Pathmark without signing in.")
+            else:
+                st.caption("Login has not been configured in Streamlit secrets yet. Download mode is available; beta/developer tools will appear here after [auth] is configured.")
 
 def role_can_use_on_the_go(role: str, status: str) -> bool:
     return status == "active" and role in {"beta_tester", "developer"}
@@ -849,4 +843,4 @@ def render_app() -> None:
 
 render_app()
 
-st.caption("Pathmark release hub. Public visitors can download Pathmark. Beta and developer tools are visible only to signed-in accounts with a verified email and the appropriate role. User files stay in the chosen Workspace; on-the-go entries are saved only to a downloaded CSV or to the Pathmark sync sheet authorised by the user with the drive.file scope.")
+st.caption("Pathmark release hub. Visitors can download Pathmark. Beta and developer tools are visible only to signed-in accounts with a verified email and the appropriate role. User files stay in the chosen Workspace; on-the-go entries are saved only to a downloaded CSV or to the Pathmark sync sheet authorised by the user with the drive.file scope.")
