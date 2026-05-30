@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import csv
 import io
+import importlib.util
 import json
 import re
 import uuid
@@ -107,6 +108,12 @@ def login_configured() -> bool:
     except Exception:
         return False
 
+
+
+
+def authlib_available() -> bool:
+    """Return True when the Streamlit authentication dependency is installed."""
+    return importlib.util.find_spec("authlib") is not None
 
 def _user_claim(user: Any, key: str, default: Any = "") -> Any:
     """Read a claim from Streamlit's OIDC user object defensively."""
@@ -310,7 +317,10 @@ def render_account_bar(role: str, user: dict[str, str]) -> None:
                     except Exception as exc:
                         st.warning(f"Could not log out: {exc}")
             elif configured:
-                if st.button("Log in with Google", use_container_width=True):
+                if not authlib_available():
+                    st.button("Login dependency missing", use_container_width=True, disabled=True)
+                    st.warning("Login is configured, but the deployed environment has not installed Streamlit's authentication dependency yet. Update requirements.txt, then clear cache and reboot the Streamlit app.")
+                elif st.button("Log in with Google", use_container_width=True):
                     try:
                         st.login()
                     except Exception as exc:

@@ -1,13 +1,13 @@
 {
   "app_name": "Pathmark",
-  "version": "v0.5.68",
+  "version": "v0.5.69",
   "release_date": "2026-05-31",
-  "windows_package": "Pathmark_Local_App_Windows_v0_5_68.zip",
+  "windows_package": "Pathmark_Local_App_Windows_v0_5_69.zip",
   "mac_package": "",
   "notes": [
-    "Changed hosted Streamlit dependency to streamlit[auth] so st.login() installs the required Authlib authentication extra.",
-    "Removed the empty input-like bar above the login panel by replacing the custom HTML wrapper with a native Streamlit bordered container.",
-    "Changed logged-out status wording from public to download only, so it is clear this refers to page access rather than user data.",
-    "Kept beta/developer tools hidden unless the signed-in user has a verified email and the appropriate role."
+    "Bumped hosted Streamlit dependency to streamlit[auth]>=1.45.0 and authlib>=1.3.2 to support st.login().",
+    "Added a login dependency check so a missing Authlib install shows a clear message instead of an internal server error.",
+    "Kept the empty input-like bar removed and retained download-only wording for logged-out visitors.",
+    "README now instructs Streamlit Cloud users to clear cache and reboot after updating requirements."
   ]
 }

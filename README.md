@@ -11,7 +11,7 @@ app/
   main.py
   assets/pathmark.png
 downloads/
-  Pathmark_Local_App_Windows_v0_5_66.zip
+  Pathmark_Local_App_Windows_v0_5_69.zip
 latest_version.json
 requirements.txt
 .streamlit/config.toml
@@ -75,7 +75,7 @@ The Google Cloud OAuth client should be a **Web application** with the Streamlit
 
 Mac support has been removed for now.
 
-## v0.5.68 focus
+## v0.5.69 focus
 
 This release tightens the hosted login and beta-access model before wider testing. Developer bootstrap emails now live in Streamlit secrets rather than source code, beta/developer access requires a verified email claim, and Google Sheets sync is centred on app-created Pathmark sync sheets.
 
@@ -92,6 +92,11 @@ The download homepage remains available without signing in. Beta and developer t
 Required Streamlit authentication settings include `[auth]` values such as `redirect_uri`, `cookie_secret`, `client_id`, `client_secret`, and `server_metadata_url`. Developer bootstrap emails should be stored under `[pathmark_access]`, not hard-coded in the repository.
 
 
-## v0.5.68 focus
+## v0.5.69 focus
 
 This release fixes hosted login installation by using `streamlit[auth]` in `requirements.txt`, removes the misleading empty bar above the account panel, and changes the logged-out label from `public` to `download only`.
+
+
+## Streamlit login dependency note
+
+After replacing the GitHub repository contents, open Streamlit Cloud and use **Clear cache and reboot**. This forces the hosted environment to reinstall `streamlit[auth]` and `authlib`, which are required for `st.login()`.
