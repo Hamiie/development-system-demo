@@ -5,11 +5,27 @@ from pathlib import Path
 
 import streamlit as st
 
+try:
+    from PIL import Image
+except Exception:  # Streamlit can still fall back to a text favicon.
+    Image = None
+
 ROOT = Path(__file__).resolve().parents[1]
 DOWNLOADS = ROOT / "downloads"
 VERSION_FILE = ROOT / "latest_version.json"
+ICON_PATH = ROOT / "app" / "assets" / "pathmark.png"
 
-st.set_page_config(page_title="Pathmark", page_icon="PM", layout="wide")
+
+def page_icon():
+    if Image is not None and ICON_PATH.exists():
+        try:
+            return Image.open(ICON_PATH)
+        except Exception:
+            pass
+    return "PM"
+
+
+st.set_page_config(page_title="Pathmark", page_icon=page_icon(), layout="wide")
 
 CSS = """
 <style>
@@ -77,6 +93,9 @@ version = load_version()
 windows_name = version.get("windows_package", "")
 mac_name = version.get("mac_package", "")
 
+if ICON_PATH.exists():
+    st.image(str(ICON_PATH), width=54)
+
 st.markdown("""
 <div class="hero">
   <div class="eyebrow">Routines, prompts, and goal progress</div>
@@ -117,7 +136,7 @@ with win_col:
     st.markdown("""
     <div class="download-panel">
       <h3>Windows</h3>
-      <p>Download the Windows package, extract it, move <strong>Pathmark_app</strong> into your Pathmark folder, then run the launcher builder once to create <strong>Pathmark.exe</strong>.</p>
+      <p>Download the Windows package, extract it, move <strong>Pathmark_app</strong> into your Pathmark folder, then run the launcher builder once to create the updated <strong>Pathmark.exe</strong> launcher.</p>
     </div>
     """, unsafe_allow_html=True)
     if windows_name and (DOWNLOADS / windows_name).exists():
@@ -131,7 +150,7 @@ with win_col:
         )
     else:
         st.error("The Windows package is missing from this release hub.")
-    st.caption("The builder creates Pathmark.exe with the Pathmark icon. Use Start Pathmark.cmd only as a fallback if needed.")
+    st.caption("The builder creates the current Pathmark.exe launcher with the Pathmark icon. Delete any old Pathmark.exe before rebuilding.")
 
 with mac_col:
     st.markdown("""

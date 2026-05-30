@@ -13,3 +13,6 @@ It should contain only:
 - `.gitignore`
 
 The Windows package is build-first: users or maintainers run `build_launcher_exe.bat` inside the extracted Pathmark app package to create `Pathmark.exe`. The fallback launcher is `Start Pathmark.cmd`.
+
+
+The release hub uses `app/assets/pathmark.png` as the browser/page icon so it matches the launcher and local app.
