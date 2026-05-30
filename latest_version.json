@@ -1,13 +1,13 @@
 {
   "app_name": "Pathmark",
-  "version": "v0.5.50",
+  "version": "v0.5.53",
   "release_date": "2026-05-30",
-  "windows_package": "Pathmark_Local_App_Windows_v0_5_50.zip",
+  "windows_package": "Pathmark_Local_App_Windows_v0_5_53.zip",
   "mac_package": "",
   "notes": [
-    "Homepage now explains Pathmark in clearer user-facing language without over-repeating setup text.",
-    "Launcher cards and controls have been softened to feel closer to the homepage experience.",
-    "Area import now strictly requires numbered folders and fixes older unnumbered auto-imports more reliably.",
-    "Default theme contrast has been reinforced for button text."
+    "Theme changes made inside Pathmark now apply immediately instead of being overwritten by the launcher on each rerun.",
+    "Theme palettes now check text contrast against backgrounds, buttons, tags, inputs, dropdowns, and placeholder text.",
+    "Imported numbered Area folders are assigned unused Google Calendar colours where possible before colours are reused.",
+    "Area import continues to require numbered folders such as 01_Area_Name; 00_System remains reserved."
   ]
 }
