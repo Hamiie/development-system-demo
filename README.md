@@ -11,7 +11,7 @@ app/
   main.py
   assets/pathmark.png
 downloads/
-  Pathmark_Local_App_Windows_v0_5_72.zip
+  Pathmark_Local_App_Windows_v0_5_73.zip
 latest_version.json
 requirements.txt
 .streamlit/config.toml
@@ -62,7 +62,7 @@ Developer access should be bootstrapped through Streamlit secrets, not hard-code
 
 ## Supabase access layer
 
-From v0.5.72, persistent role management is designed to use Supabase rather than a Google Sheet service-account key.
+From v0.5.73, persistent role management is designed to use Supabase rather than a Google Sheet service-account key. This version prefers Supabase Secret API keys (`sb_secret_...`) rather than legacy JWT-based `service_role` keys.
 
 Supabase is used only for hosted Pathmark access control:
 
@@ -75,13 +75,15 @@ Supabase is used only for hosted Pathmark access control:
 
 It should **not** store Pathmark goals, routines, Google Tasks prompts, calendar blocks, Workspace files, backups, Markdown files, or on-the-go planning entries.
 
-Add these Streamlit secrets when Supabase is configured:
+Add these Streamlit secrets when Supabase is configured. New setups should use a Supabase Secret API key from **Settings → API Keys**:
 
 ```toml
 [supabase]
 url = "https://YOUR_PROJECT_ID.supabase.co"
-service_role_key = "YOUR_SUPABASE_SERVICE_ROLE_KEY"
+secret_key = "sb_secret_YOUR_SUPABASE_SECRET_API_KEY"
 ```
+
+`service_role_key` is still accepted as a migration fallback for older projects, but it is not recommended for new setups.
 
 Then run this SQL in the Supabase SQL editor:
 
@@ -112,6 +114,10 @@ create table if not exists pathmark_audit_log (
   details jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now()
 );
+
+alter table pathmark_users enable row level security;
+alter table pathmark_feature_flags enable row level security;
+alter table pathmark_audit_log enable row level security;
 
 insert into pathmark_feature_flags (key, enabled, minimum_role, notes)
 values
@@ -148,6 +154,6 @@ The requested scope is the narrower Google `drive.file` permission. Private on-t
 
 Mac support has been removed for now.
 
-## v0.5.72 focus
+## v0.5.73 focus
 
-This release introduces the Supabase access layer for hosted role management, feature flags, and audit logs. It removes the Google Sheet service-account role-store model while preserving Google login, Streamlit-secret bootstrap developer access, and user-owned Google Sheets for on-the-go sync.
+This release revises the Supabase access layer to prefer Supabase Secret API keys (`sb_secret_...`) for hosted role management, feature flags, and audit logs. The legacy `service_role_key` setting is still accepted as a fallback, but new deployments should use `secret_key` in Streamlit secrets. RLS is explicitly enabled in the setup SQL because Pathmark should access these tables only from the hosted Streamlit server-side code.

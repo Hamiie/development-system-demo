@@ -1,13 +1,13 @@
 {
   "app_name": "Pathmark",
-  "version": "v0.5.72",
+  "version": "v0.5.73",
   "release_date": "2026-05-31",
-  "windows_package": "Pathmark_Local_App_Windows_v0_5_72.zip",
+  "windows_package": "Pathmark_Local_App_Windows_v0_5_73.zip",
   "mac_package": "",
   "notes": [
-    "Added a Supabase-backed hosted access layer for long-term role management, feature flags, and audit logs.",
-    "Removed the service-account Google Sheet role-store model from the hosted Developer panel.",
-    "Developer role assignments can now be saved to Supabase when configured; bootstrap developer/beta lists in Streamlit secrets still work as fallback.",
-    "Clarified that Supabase is for hosted access control only and should not store Pathmark goals, routines, Workspace files, or on-the-go planning entries."
+    "Updated the hosted Supabase access layer to prefer Supabase Secret API keys (sb_secret_...) instead of legacy JWT-based service_role keys.",
+    "Kept legacy service_role_key support as a fallback for older projects while documenting secret_key as the recommended Streamlit secret.",
+    "Adjusted Supabase REST headers so Secret API keys are sent as apikey only, while legacy service_role keys retain the Authorization bearer header.",
+    "Updated Supabase setup instructions to explicitly enable Row Level Security on the access-control tables."
   ]
 }

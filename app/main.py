@@ -334,15 +334,26 @@ def supabase_config() -> dict[str, str] | None:
     Supabase is used only for hosted Pathmark access control: users, roles,
     status, feature flags, and audit logs. It is not used for Pathmark planning
     data, goals, routines, task prompts, Workspace files, or on-the-go entries.
+
+    Prefer Supabase's newer `sb_secret_...` Secret API keys for server-side
+    hosted role management. The older JWT-based service_role key is still
+    accepted as a migration fallback, but should not be used for new setups.
     """
     cfg = _secret_section("supabase") or _secret_section("pathmark_supabase")
     if not cfg:
         return None
     url = str(cfg.get("url", "") or cfg.get("project_url", "")).strip().rstrip("/")
-    key = str(cfg.get("service_role_key", "") or cfg.get("key", "") or cfg.get("service_key", "")).strip()
+    key = str(
+        cfg.get("secret_key", "")
+        or cfg.get("secret_api_key", "")
+        or cfg.get("key", "")
+        or cfg.get("service_role_key", "")
+        or cfg.get("service_key", "")
+    ).strip()
     if not (url and key):
         return None
-    return {"url": url, "key": key}
+    key_kind = "secret" if key.startswith("sb_secret_") else "legacy_service_role"
+    return {"url": url, "key": key, "key_kind": key_kind}
 
 
 def supabase_available() -> bool:
@@ -357,11 +368,15 @@ def supabase_request(method: str, table: str, query: str = "", body: Any | None 
     data = None if body is None else json.dumps(body).encode("utf-8")
     headers = {
         "apikey": cfg["key"],
-        "Authorization": f"Bearer {cfg['key']}",
         "Content-Type": "application/json",
         "Accept": "application/json",
         "Prefer": prefer,
     }
+    # Supabase Secret API keys (`sb_secret_...`) are not JWTs. They should be
+    # sent as the `apikey` header and kept server-side only. Legacy service_role
+    # keys are JWT-based and continue to use the Authorization bearer header.
+    if cfg.get("key_kind") == "legacy_service_role":
+        headers["Authorization"] = f"Bearer {cfg['key']}"
     try:
         req = urllib.request.Request(url, data=data, headers=headers, method=method.upper())
         with urllib.request.urlopen(req, timeout=15) as response:
@@ -1021,13 +1036,15 @@ def developer_tab() -> None:
         st.info("Persistent role management is not configured yet. Bootstrap developer and beta access can still be supplied through Streamlit secrets, but role assignments cannot be saved from this page until Supabase is configured.")
         with st.expander("Supabase access-layer setup", expanded=True):
             st.markdown("""
-            Create a Supabase project for hosted Pathmark access control, then add the project URL and service-role key to Streamlit secrets. Keep the service-role key in Streamlit secrets only. Do not commit it to GitHub.
+            Create a Supabase project for hosted Pathmark access control, then add the project URL and a Supabase Secret API key to Streamlit secrets. Use an `sb_secret_...` key from Supabase **Settings → API Keys**. Keep it in Streamlit secrets only. Do not commit it to GitHub.
 
             ```toml
             [supabase]
             url = "https://YOUR_PROJECT_ID.supabase.co"
-            service_role_key = "YOUR_SUPABASE_SERVICE_ROLE_KEY"
+            secret_key = "sb_secret_YOUR_SUPABASE_SECRET_API_KEY"
             ```
+
+            Legacy `service_role_key` is still accepted as a fallback for older projects, but new setups should use `secret_key`.
 
             Then run this SQL in the Supabase SQL editor:
 
@@ -1058,6 +1075,10 @@ def developer_tab() -> None:
               details jsonb not null default '{}'::jsonb,
               created_at timestamptz not null default now()
             );
+
+            alter table pathmark_users enable row level security;
+            alter table pathmark_feature_flags enable row level security;
+            alter table pathmark_audit_log enable row level security;
 
             insert into pathmark_feature_flags (key, enabled, minimum_role, notes)
             values
