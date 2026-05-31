@@ -160,3 +160,26 @@ Mac support has been removed for now.
 ## v0.5.74 focus
 
 This release adds a versioned Supabase migration structure for the hosted access-control database. The migration creates only the access tables, enables RLS, inserts the default feature flags, and deliberately excludes personal developer rows and secrets. This makes the GitHub-linked Supabase setup safer and easier to reproduce while keeping private data out of the repository.
+
+## Google Sheets On-the-go OAuth checks
+
+Pathmark v0.5.75 adds a safe diagnostics panel in the hosted On-the-go beta tab. The panel shows only non-secret values: whether Google OAuth is configured, the OAuth client ID prefix, the redirect URI, the requested scope, and the Google authorisation endpoint.
+
+For Google Sheets sync, configure the same Google Cloud project used by Streamlit secrets:
+
+```toml
+[google_oauth]
+client_id = "YOUR_GOOGLE_WEB_CLIENT_ID"
+client_secret = "YOUR_GOOGLE_WEB_CLIENT_SECRET"
+redirect_uri = "https://pathmark.streamlit.app"
+```
+
+Google Cloud checklist:
+
+1. Use an OAuth 2.0 **Web application** client.
+2. Add the exact authorised redirect URI: `https://pathmark.streamlit.app`.
+3. If the Google Auth Platform app is in Testing, add the developer/beta Google accounts as test users.
+4. Add the scope `https://www.googleapis.com/auth/drive.file` under Data Access.
+5. Enable both **Google Sheets API** and **Google Drive API** for the same project.
+
+The hosted app requests `drive.file` only. It should create and update user-authorised Pathmark sync files, not read all of a user’s Google Sheets.

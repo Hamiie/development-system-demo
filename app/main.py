@@ -671,7 +671,7 @@ def google_oauth_config() -> dict[str, Any] | None:
             "web": {
                 "client_id": client_id,
                 "client_secret": client_secret,
-                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                "auth_uri": "https://accounts.google.com/o/oauth2/v2/auth",
                 "token_uri": "https://oauth2.googleapis.com/token",
                 "redirect_uris": [redirect_uri],
             }
@@ -681,6 +681,56 @@ def google_oauth_config() -> dict[str, Any] | None:
 
 def web_oauth_available() -> bool:
     return google_oauth_config() is not None
+
+def google_oauth_diagnostics() -> dict[str, str]:
+    """Return non-secret Google Sheets OAuth diagnostics for the hosted setup panel."""
+    cfg = google_oauth_config()
+    if not cfg:
+        return {
+            "configured": "no",
+            "client_id_prefix": "",
+            "redirect_uri": "",
+            "scope": ", ".join(GOOGLE_SHEETS_SCOPES),
+            "auth_uri": "https://accounts.google.com/o/oauth2/v2/auth",
+        }
+    client_id = cfg.get("client_id", "")
+    prefix = client_id[:18] + "..." if len(client_id) > 18 else client_id
+    return {
+        "configured": "yes",
+        "client_id_prefix": prefix,
+        "redirect_uri": cfg.get("redirect_uri", ""),
+        "scope": ", ".join(GOOGLE_SHEETS_SCOPES),
+        "auth_uri": cfg.get("client_config", {}).get("web", {}).get("auth_uri", "https://accounts.google.com/o/oauth2/v2/auth"),
+    }
+
+
+def render_google_sheets_oauth_diagnostics() -> None:
+    """Show a safe checklist for Google Sheets OAuth setup without exposing secrets."""
+    diag = google_oauth_diagnostics()
+    with st.expander("Google Sheets connection diagnostics", expanded=False):
+        if diag["configured"] == "yes":
+            st.success("Google Sheets OAuth secrets are present in Streamlit for this deployment.")
+        else:
+            st.warning("Google Sheets OAuth secrets are not fully configured in Streamlit.")
+        st.code(
+            "Configured: {configured}\n"
+            "OAuth client ID: {client_id_prefix}\n"
+            "Redirect URI: {redirect_uri}\n"
+            "Requested scope: {scope}\n"
+            "Google auth endpoint: {auth_uri}".format(**diag),
+            language="text",
+        )
+        st.markdown("""
+        If Google shows an **Access blocked**, **redirect_uri_mismatch**, or **invalid_request** page, check Google Cloud first:
+
+        1. **APIs & Services → Credentials → OAuth 2.0 Client IDs**: use a **Web application** client.
+        2. Add this exact authorised redirect URI: `https://pathmark.streamlit.app`
+        3. **Google Auth Platform → Audience**: if the app is in Testing, add your Google account as a test user.
+        4. **Google Auth Platform → Data Access**: include the requested scope `https://www.googleapis.com/auth/drive.file`.
+        5. **APIs & Services → Library**: enable both **Google Sheets API** and **Google Drive API** for the same project.
+
+        Pathmark uses `drive.file` so the hosted app can create and update Pathmark sync files authorised by the user, rather than requesting access to all spreadsheets.
+        """)
 
 
 def google_credentials_from_session():
@@ -942,6 +992,7 @@ def on_the_go_tab() -> None:
     st.subheader("1. Choose where to save this capture")
     auth_ready = web_oauth_available()
     credentials = google_credentials_from_session()
+    render_google_sheets_oauth_diagnostics()
     if not auth_ready:
         st.info("Google Sheets OAuth is not configured on this hosted deployment yet. Use the CSV download workflow below.")
     else:
@@ -970,7 +1021,7 @@ def on_the_go_tab() -> None:
             auth_url = google_auth_url()
             if auth_url:
                 st.link_button("Connect Google Sheets", auth_url, use_container_width=True)
-            st.caption("You will be asked by Google to allow Pathmark to create and update the specific Google Drive files used by this app. Access is kept for this browser session only.")
+            st.caption("You will be asked by Google to allow Pathmark to create and update the specific Google Drive files used by this app. Access is kept for this browser session only. If Google shows only a request-details error page, open the diagnostics above and check the exact redirect URI, test-user, and drive.file scope settings in Google Cloud.")
 
     with st.expander("Advanced: use an existing Pathmark sync sheet", expanded=False):
         sheet_url_input = st.text_input("Google Sheet URL or ID", value=st.session_state.get("sync_sheet_id", ""), help="Use a Pathmark sync sheet that belongs to your Google account. With the safer drive.file permission, Pathmark can only use files it created or files you have explicitly opened with the app.")

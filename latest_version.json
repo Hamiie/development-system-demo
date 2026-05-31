@@ -1,13 +1,13 @@
 {
   "app_name": "Pathmark",
-  "version": "v0.5.74",
+  "version": "v0.5.75",
   "release_date": "2026-05-31",
-  "windows_package": "Pathmark_Local_App_Windows_v0_5_74.zip",
+  "windows_package": "Pathmark_Local_App_Windows_v0_5_75.zip",
   "mac_package": "",
   "notes": [
-    "Added a versioned Supabase migration folder for the hosted access-control schema.",
-    "Migration creates only access-control tables, enables RLS, and inserts default feature flags.",
-    "Kept personal developer rows, private emails, OAuth secrets, Supabase keys, and Streamlit secrets out of the repository.",
-    "Updated documentation and Developer settings guidance for GitHub-linked Supabase setup."
+    "Added Google Sheets OAuth diagnostics to the hosted On-the-go beta panel.",
+    "Updated the hosted Google Sheets OAuth flow to use the current Google OAuth v2 authorisation endpoint.",
+    "Added deployment checks for authorised redirect URI, test users, drive.file scope, and Google Sheets/Drive APIs.",
+    "Kept the Supabase migration and Secret API key access model from v0.5.74."
   ]
 }
