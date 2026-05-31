@@ -302,146 +302,228 @@ def handle_login_redirect() -> bool:
         st.error(f"Could not complete Google login: {exc}")
         return True
 
-def configured_developer_emails() -> set[str]:
-    access = _secret_section("pathmark_access")
-    values: list[str] = []
-    raw = access.get("developer_emails", []) if access else []
+def _list_from_secret(section: dict[str, Any], key: str) -> set[str]:
+    raw = section.get(key, []) if section else []
     if isinstance(raw, str):
         values = [item.strip() for item in raw.split(",")]
     elif isinstance(raw, list):
         values = [str(item).strip() for item in raw]
+    else:
+        values = []
     return {item.lower() for item in values if item}
 
 
-def role_store_config() -> dict[str, Any] | None:
-    """Return optional app-owned role store settings.
-
-    This store is separate from user planning data. If configured, it stores
-    only access records: email, role, status, and login/update times.
-    """
+def configured_developer_emails() -> set[str]:
     access = _secret_section("pathmark_access")
-    if not access:
-        return None
-    sheet_id = str(access.get("role_store_sheet_id", "")).strip()
-    sa_json = access.get("service_account_json", "")
-    if not sheet_id or not sa_json:
-        return None
-    return {"sheet_id": sheet_id, "service_account_json": sa_json}
+    return _list_from_secret(access, "developer_emails")
 
 
-def role_store_client():
-    cfg = role_store_config()
+def configured_beta_emails() -> set[str]:
+    access = _secret_section("pathmark_access")
+    return _list_from_secret(access, "beta_tester_emails")
+
+
+def configured_disabled_emails() -> set[str]:
+    access = _secret_section("pathmark_access")
+    return _list_from_secret(access, "disabled_emails")
+
+
+def supabase_config() -> dict[str, str] | None:
+    """Return optional Supabase access-layer settings.
+
+    Supabase is used only for hosted Pathmark access control: users, roles,
+    status, feature flags, and audit logs. It is not used for Pathmark planning
+    data, goals, routines, task prompts, Workspace files, or on-the-go entries.
+    """
+    cfg = _secret_section("supabase") or _secret_section("pathmark_supabase")
     if not cfg:
         return None
-    try:
-        import gspread  # type: ignore
-        raw = cfg["service_account_json"]
-        info = json.loads(raw) if isinstance(raw, str) else dict(raw)
-        return gspread.service_account_from_dict(info)
-    except Exception as exc:
-        st.warning(f"Developer role store is not available: {exc}")
+    url = str(cfg.get("url", "") or cfg.get("project_url", "")).strip().rstrip("/")
+    key = str(cfg.get("service_role_key", "") or cfg.get("key", "") or cfg.get("service_key", "")).strip()
+    if not (url and key):
         return None
+    return {"url": url, "key": key}
 
 
-def read_role_records() -> list[dict[str, str]]:
-    client = role_store_client()
-    cfg = role_store_config()
-    if client is None or cfg is None:
-        return []
+def supabase_available() -> bool:
+    return supabase_config() is not None
+
+
+def supabase_request(method: str, table: str, query: str = "", body: Any | None = None, prefer: str = "return=representation") -> tuple[bool, Any]:
+    cfg = supabase_config()
+    if not cfg:
+        return False, "Supabase is not configured."
+    url = f"{cfg['url']}/rest/v1/{table}{query}"
+    data = None if body is None else json.dumps(body).encode("utf-8")
+    headers = {
+        "apikey": cfg["key"],
+        "Authorization": f"Bearer {cfg['key']}",
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Prefer": prefer,
+    }
     try:
-        sh = client.open_by_key(cfg["sheet_id"])
-        try:
-            ws = sh.worksheet("users")
-        except Exception:
-            ws = sh.add_worksheet(title="users", rows=100, cols=len(ROLE_COLUMNS))
-            ws.append_row(ROLE_COLUMNS)
-        records = ws.get_all_records()
-        out: list[dict[str, str]] = []
-        for rec in records:
-            email = str(rec.get("email", "")).strip().lower()
-            if not email:
-                continue
-            role = str(rec.get("role", "standard")).strip()
-            status = str(rec.get("status", "active")).strip()
-            out.append({
-                "email": email,
-                "role": role if role in ROLE_VALUES else "standard",
-                "status": status if status in STATUS_VALUES else "active",
-                "last_login": str(rec.get("last_login", "")).strip(),
-                "updated_at": str(rec.get("updated_at", "")).strip(),
-            })
-        return out
+        req = urllib.request.Request(url, data=data, headers=headers, method=method.upper())
+        with urllib.request.urlopen(req, timeout=15) as response:
+            raw = response.read().decode("utf-8")
+        if not raw:
+            return True, None
+        return True, json.loads(raw)
+    except urllib.error.HTTPError as exc:
+        detail = exc.read().decode("utf-8", errors="replace")
+        return False, f"Supabase HTTP {exc.code}: {detail}"
     except Exception as exc:
-        st.warning(f"Could not read developer role store: {exc}")
-        return []
+        return False, str(exc)
 
 
-def upsert_role_record(email: str, role: str, status: str = "active", update_login: bool = False) -> tuple[bool, str]:
+def normalise_role(role: str) -> str:
+    role = (role or "standard").strip()
+    return role if role in ROLE_VALUES else "standard"
+
+
+def normalise_status(status: str) -> str:
+    status = (status or "active").strip()
+    return status if status in STATUS_VALUES else "active"
+
+
+def read_supabase_user(email: str) -> dict[str, str] | None:
     email = (email or "").strip().lower()
-    role = role if role in ROLE_VALUES else "standard"
-    status = status if status in STATUS_VALUES else "active"
+    if not email or not supabase_available():
+        return None
+    query = "?" + urllib.parse.urlencode({"email": f"eq.{email}", "select": "email,role,status,created_at,updated_at,last_login,notes"})
+    ok, payload = supabase_request("GET", "pathmark_users", query=query)
+    if not ok or not isinstance(payload, list) or not payload:
+        return None
+    rec = payload[0]
+    return {
+        "email": str(rec.get("email", "")).strip().lower(),
+        "role": normalise_role(str(rec.get("role", "standard"))),
+        "status": normalise_status(str(rec.get("status", "active"))),
+        "created_at": str(rec.get("created_at", "") or ""),
+        "updated_at": str(rec.get("updated_at", "") or ""),
+        "last_login": str(rec.get("last_login", "") or ""),
+        "notes": str(rec.get("notes", "") or ""),
+    }
+
+
+def list_supabase_users() -> list[dict[str, str]]:
+    if not supabase_available():
+        return []
+    query = "?select=email,role,status,created_at,updated_at,last_login,notes&order=email.asc"
+    ok, payload = supabase_request("GET", "pathmark_users", query=query)
+    if not ok or not isinstance(payload, list):
+        if not ok:
+            st.warning(f"Could not read Supabase access table: {payload}")
+        return []
+    out: list[dict[str, str]] = []
+    for rec in payload:
+        email = str(rec.get("email", "")).strip().lower()
+        if not email:
+            continue
+        out.append({
+            "email": email,
+            "role": normalise_role(str(rec.get("role", "standard"))),
+            "status": normalise_status(str(rec.get("status", "active"))),
+            "created_at": str(rec.get("created_at", "") or ""),
+            "updated_at": str(rec.get("updated_at", "") or ""),
+            "last_login": str(rec.get("last_login", "") or ""),
+            "notes": str(rec.get("notes", "") or ""),
+        })
+    return out
+
+
+def write_audit_log(actor_email: str, action: str, target_email: str = "", details: dict[str, Any] | None = None) -> None:
+    if not supabase_available():
+        return
+    row = {
+        "actor_email": (actor_email or "").strip().lower(),
+        "action": action,
+        "target_email": (target_email or "").strip().lower(),
+        "details": details or {},
+        "created_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+    }
+    supabase_request("POST", "pathmark_audit_log", body=[row], prefer="return=minimal")
+
+
+def upsert_supabase_user(email: str, role: str, status: str = "active", notes: str = "", actor_email: str = "", update_login: bool = False) -> tuple[bool, str]:
+    email = (email or "").strip().lower()
+    role = normalise_role(role)
+    status = normalise_status(status)
     if not email or "@" not in email:
         return False, "Enter a valid email address."
     if email in configured_developer_emails() and role != "developer":
         return False, "A developer account listed in Streamlit secrets cannot be downgraded from the hosted UI."
-    client = role_store_client()
-    cfg = role_store_config()
-    if client is None or cfg is None:
-        return False, "Persistent role management is not configured yet. Add a private role-store Google Sheet in Streamlit secrets."
+    if not supabase_available():
+        return False, "Supabase access management is not configured yet."
     now = datetime.now(timezone.utc).isoformat(timespec="seconds")
-    try:
-        sh = client.open_by_key(cfg["sheet_id"])
-        try:
-            ws = sh.worksheet("users")
-        except Exception:
-            ws = sh.add_worksheet(title="users", rows=100, cols=len(ROLE_COLUMNS))
-            ws.append_row(ROLE_COLUMNS)
-        values = ws.get_all_values()
-        if not values:
-            ws.append_row(ROLE_COLUMNS)
-            values = [ROLE_COLUMNS]
-        if values[0][:len(ROLE_COLUMNS)] != ROLE_COLUMNS:
-            ws.update("A1:E1", [ROLE_COLUMNS])
-            values[0] = ROLE_COLUMNS
-        target_row = None
-        for idx, row in enumerate(values[1:], start=2):
-            if row and row[0].strip().lower() == email:
-                target_row = idx
-                break
-        existing_last_login = ""
-        if target_row:
-            current = values[target_row - 1]
-            if len(current) >= 4:
-                existing_last_login = current[3]
-        last_login = now if update_login else existing_last_login
-        row_values = [email, role, status, last_login, now]
-        if target_row:
-            ws.update(f"A{target_row}:E{target_row}", [row_values])
-        else:
-            ws.append_row(row_values)
-        return True, "Role saved."
-    except Exception as exc:
-        return False, f"Could not update role store: {exc}"
+    existing = read_supabase_user(email) or {}
+    row = {
+        "email": email,
+        "role": role,
+        "status": status,
+        "updated_at": now,
+        "notes": notes,
+    }
+    if not existing:
+        row["created_at"] = now
+    if update_login:
+        row["last_login"] = now
+    query = "?on_conflict=email"
+    ok, payload = supabase_request("POST", "pathmark_users", query=query, body=[row], prefer="resolution=merge-duplicates,return=representation")
+    if not ok:
+        return False, f"Could not save access record: {payload}"
+    write_audit_log(actor_email, "upsert_user", email, {"role": role, "status": status, "update_login": update_login})
+    return True, "User access saved."
+
+
+def read_feature_flags() -> list[dict[str, Any]]:
+    if not supabase_available():
+        return []
+    query = "?select=key,enabled,minimum_role,updated_at,notes&order=key.asc"
+    ok, payload = supabase_request("GET", "pathmark_feature_flags", query=query)
+    if not ok or not isinstance(payload, list):
+        return []
+    return payload
+
+
+def role_rank(role: str) -> int:
+    return {"public": 0, "standard": 1, "beta_tester": 2, "developer": 3}.get(role, 0)
+
+
+def feature_enabled(key: str, role: str, default_enabled: bool = True, default_minimum_role: str = "standard") -> bool:
+    """Return whether a feature is enabled for the current role.
+
+    If Supabase or the flag row is not configured, the code uses safe defaults
+    defined in the caller. This lets the app remain usable while the access
+    layer is being set up.
+    """
+    flags = read_feature_flags()
+    for flag in flags:
+        if str(flag.get("key", "")) == key:
+            enabled = bool(flag.get("enabled", True))
+            minimum_role = normalise_role(str(flag.get("minimum_role", default_minimum_role)))
+            return enabled and role_rank(role) >= role_rank(minimum_role)
+    return default_enabled and role_rank(role) >= role_rank(default_minimum_role)
 
 
 def resolve_role(email: str, email_verified: bool = False) -> tuple[str, str]:
-    """Return (role, status), defaulting unknown logged-in users to standard.
-
-    Developer and beta access require a verified email claim from the identity
-    provider. This prevents unverified identities from being granted protected
-    hosted features.
-    """
+    """Return (role, status), defaulting unknown logged-in users to standard."""
     email = (email or "").strip().lower()
     if not email:
         return "public", "active"
     if not email_verified:
         return "standard", "active"
+    if email in configured_disabled_emails():
+        return "standard", "disabled"
     if email in configured_developer_emails():
         return "developer", "active"
-    for record in read_role_records():
-        if record["email"] == email:
-            return record["role"], record["status"]
+    record = read_supabase_user(email)
+    if record:
+        return record["role"], record["status"]
+    if email in configured_beta_emails():
+        return "beta_tester", "active"
     return "standard", "active"
+
 
 def maybe_record_login(email: str, role: str, status: str) -> None:
     if not email or status != "active":
@@ -449,10 +531,15 @@ def maybe_record_login(email: str, role: str, status: str) -> None:
     key = f"login_recorded_{email}"
     if st.session_state.get(key):
         return
-    if role_store_config() is not None:
-        upsert_role_record(email, role, status, update_login=True)
+    if supabase_available() and role != "public":
+        # Create/update a standard record for new users, while preserving existing
+        # role/status from Supabase. Bootstrap developers stay developer.
+        existing = read_supabase_user(email)
+        target_role = "developer" if email in configured_developer_emails() else (existing.get("role") if existing else role)
+        target_status = existing.get("status") if existing else status
+        notes = existing.get("notes", "") if existing else "Auto-created from Google login."
+        upsert_supabase_user(email, str(target_role), str(target_status), notes=notes, actor_email="pathmark-system", update_login=True)
     st.session_state[key] = True
-
 
 def render_account_bar(role: str, user: dict[str, str]) -> None:
     """Render minimal account controls without a status bar."""
@@ -485,11 +572,11 @@ def render_account_bar(role: str, user: dict[str, str]) -> None:
             st.button("Log in not configured", use_container_width=True, disabled=True)
 
 def role_can_use_on_the_go(role: str, status: str) -> bool:
-    return status == "active" and role in {"beta_tester", "developer"}
+    return status == "active" and feature_enabled("on_the_go_beta", role, default_enabled=True, default_minimum_role="beta_tester")
 
 
 def role_can_develop(role: str, status: str) -> bool:
-    return status == "active" and role == "developer"
+    return status == "active" and feature_enabled("developer_panel", role, default_enabled=True, default_minimum_role="developer")
 
 
 def row_to_csv_bytes(row: dict[str, str]) -> bytes:
@@ -927,27 +1014,75 @@ def developer_tab() -> None:
     - **beta_tester**: On-the-go beta access.
     - **developer**: beta access plus this developer panel.
     """)
-    if role_store_config() is None:
-        st.info("Persistent role management is not configured yet. Developer access must be bootstrapped from Streamlit secrets, and role assignments cannot be saved until a private role-store Google Sheet is configured.")
-        with st.expander("Role store setup", expanded=False):
+    actor = current_user().get("email", "")
+    if supabase_available():
+        st.success("Supabase access management is connected. Supabase is used only for roles, feature flags, and audit logs. It does not store Pathmark goals, routines, task prompts, Workspace files, or on-the-go planning entries.")
+    else:
+        st.info("Persistent role management is not configured yet. Bootstrap developer and beta access can still be supplied through Streamlit secrets, but role assignments cannot be saved from this page until Supabase is configured.")
+        with st.expander("Supabase access-layer setup", expanded=True):
             st.markdown("""
-            Configure a private app-owned role store in Streamlit secrets. This stores access records only: email address, role, status, last login, and update timestamps. It does not contain Pathmark goals, routines, tasks, Workspace files, or on-the-go planning entries.
+            Create a Supabase project for hosted Pathmark access control, then add the project URL and service-role key to Streamlit secrets. Keep the service-role key in Streamlit secrets only. Do not commit it to GitHub.
 
             ```toml
-            [pathmark_access]
-            developer_emails = ["you@example.com"]
-            role_store_sheet_id = "YOUR_PRIVATE_ROLE_SHEET_ID"
-            service_account_json = '''{"type":"service_account", "client_email":"...", "private_key":"..."}'''
+            [supabase]
+            url = "https://YOUR_PROJECT_ID.supabase.co"
+            service_role_key = "YOUR_SUPABASE_SERVICE_ROLE_KEY"
             ```
 
-            The role sheet should be private and shared only with the service-account email. Pathmark will create or update a `users` worksheet with columns: `email`, `role`, `status`, `last_login`, `updated_at`.
+            Then run this SQL in the Supabase SQL editor:
+
+            ```sql
+            create table if not exists pathmark_users (
+              email text primary key,
+              role text not null default 'standard' check (role in ('standard', 'beta_tester', 'developer')),
+              status text not null default 'active' check (status in ('active', 'disabled')),
+              created_at timestamptz not null default now(),
+              updated_at timestamptz not null default now(),
+              last_login timestamptz,
+              notes text
+            );
+
+            create table if not exists pathmark_feature_flags (
+              key text primary key,
+              enabled boolean not null default true,
+              minimum_role text not null default 'standard' check (minimum_role in ('standard', 'beta_tester', 'developer')),
+              updated_at timestamptz not null default now(),
+              notes text
+            );
+
+            create table if not exists pathmark_audit_log (
+              id uuid primary key default gen_random_uuid(),
+              actor_email text,
+              action text not null,
+              target_email text,
+              details jsonb not null default '{}'::jsonb,
+              created_at timestamptz not null default now()
+            );
+
+            insert into pathmark_feature_flags (key, enabled, minimum_role, notes)
+            values
+              ('on_the_go_beta', true, 'beta_tester', 'Shows the On-the-go beta tab.'),
+              ('developer_panel', true, 'developer', 'Shows the Developer settings tab.')
+            on conflict (key) do nothing;
+            ```
+
+            Keep this separate from user-owned Pathmark sync sheets. Supabase is the access layer only; user planning data remains in the Workspace and in any user-authorised sync sheet.
             """)
-    records = read_role_records()
+
+    st.subheader("Bootstrap access from Streamlit secrets")
+    access_summary = pd.DataFrame([
+        {"list": "developer_emails", "emails": ", ".join(sorted(configured_developer_emails())) or "—"},
+        {"list": "beta_tester_emails", "emails": ", ".join(sorted(configured_beta_emails())) or "—"},
+        {"list": "disabled_emails", "emails": ", ".join(sorted(configured_disabled_emails())) or "—"},
+    ])
+    st.dataframe(access_summary, use_container_width=True, hide_index=True)
+
+    records = list_supabase_users()
     if records:
-        st.subheader("Current role records")
+        st.subheader("Supabase user records")
         st.dataframe(pd.DataFrame(records), use_container_width=True, hide_index=True)
-    else:
-        st.caption("No role records found. Initial developer emails are still treated as developer accounts.")
+    elif supabase_available():
+        st.caption("Supabase is connected, but no user records have been saved yet. The first signed-in users may be auto-created as standard users.")
 
     st.subheader("Assign or update a user role")
     c1, c2, c3 = st.columns([2, 1, 1])
@@ -957,13 +1092,34 @@ def developer_tab() -> None:
         role = st.selectbox("Role", ROLE_VALUES, index=0)
     with c3:
         status = st.selectbox("Status", STATUS_VALUES, index=0)
+    notes = st.text_input("Notes", placeholder="Optional admin note")
     if st.button("Save user access", use_container_width=True):
-        ok, msg = upsert_role_record(email, role, status)
+        ok, msg = upsert_supabase_user(email, role, status, notes=notes, actor_email=actor)
         if ok:
             st.success(msg)
             st.rerun()
         else:
             st.warning(msg)
+
+    st.subheader("Feature flags")
+    flags = read_feature_flags()
+    if flags:
+        st.dataframe(pd.DataFrame(flags), use_container_width=True, hide_index=True)
+    elif supabase_available():
+        st.caption("No feature flags found. Use the setup SQL above to add the default flags.")
+    else:
+        st.caption("Feature flags use default role rules until Supabase is configured.")
+
+    with st.expander("Security model", expanded=False):
+        st.markdown("""
+        Pathmark uses three separate layers:
+
+        - **Google login** identifies the signed-in user. Pathmark does not collect or store passwords.
+        - **Supabase access records** decide whether that verified user is standard, beta tester, developer, active, or disabled.
+        - **User-owned Google sync sheets** are separate and are used only for on-the-go planning captures when the user authorises them.
+
+        Supabase should not store goals, routines, Google Tasks prompts, calendar blocks, Workspace files, or other private planning content at this stage.
+        """)
 
 
 def render_app() -> None:

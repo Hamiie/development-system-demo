@@ -11,7 +11,7 @@ app/
   main.py
   assets/pathmark.png
 downloads/
-  Pathmark_Local_App_Windows_v0_5_71.zip
+  Pathmark_Local_App_Windows_v0_5_72.zip
 latest_version.json
 requirements.txt
 .streamlit/config.toml
@@ -32,7 +32,7 @@ The launcher creates or points to the workspace folder on first launch. The work
 
 Visitors can download Pathmark without logging in. Beta and developer features are hidden unless the user signs in with Google and has an allowed role. Unknown signed-in users default to `standard`.
 
-The hosted login now uses a Pathmark-managed Google OAuth flow rather than Streamlit `st.login()`. This avoids the Streamlit Authlib route error while still keeping password entry with Google. Pathmark receives the verified Google email claim; it does not collect or store passwords.
+The hosted login uses a Pathmark-managed Google OAuth flow rather than Streamlit `st.login()`. This avoids the Streamlit Authlib route issue while still keeping password entry with Google. Pathmark receives the verified Google email claim; it does not collect or store passwords.
 
 Expected Streamlit secrets for hosted login:
 
@@ -41,9 +41,13 @@ Expected Streamlit secrets for hosted login:
 client_id = "YOUR_GOOGLE_WEB_CLIENT_ID"
 client_secret = "YOUR_GOOGLE_WEB_CLIENT_SECRET"
 login_redirect_uri = "https://pathmark.streamlit.app"
+cookie_secret = "A_LONG_RANDOM_SECRET_USED_TO_SIGN_OAUTH_STATE"
 
 [pathmark_access]
 developer_emails = ["you@example.com"]
+# Optional fallback while Supabase is being configured:
+beta_tester_emails = []
+disabled_emails = []
 ```
 
 For backward compatibility, if `login_redirect_uri` is not provided, Pathmark will use `[google_oauth].redirect_uri` or strip `/oauth2callback` from `[auth].redirect_uri`.
@@ -56,14 +60,67 @@ https://pathmark.streamlit.app
 
 Developer access should be bootstrapped through Streamlit secrets, not hard-coded into the public repository.
 
-Optional persistent role management uses a private app-owned role store. This stores access records only: email address, role, status, last login, and update timestamps. It does not contain Pathmark goals, routines, tasks, Workspace files, or on-the-go planning entries.
+## Supabase access layer
+
+From v0.5.72, persistent role management is designed to use Supabase rather than a Google Sheet service-account key.
+
+Supabase is used only for hosted Pathmark access control:
+
+- user email
+- role
+- status
+- last login
+- feature flags
+- audit logs
+
+It should **not** store Pathmark goals, routines, Google Tasks prompts, calendar blocks, Workspace files, backups, Markdown files, or on-the-go planning entries.
+
+Add these Streamlit secrets when Supabase is configured:
 
 ```toml
-[pathmark_access]
-developer_emails = ["you@example.com"]
-role_store_sheet_id = "YOUR_PRIVATE_ROLE_SHEET_ID"
-service_account_json = '''{"type":"service_account", "client_email":"...", "private_key":"..."}'''
+[supabase]
+url = "https://YOUR_PROJECT_ID.supabase.co"
+service_role_key = "YOUR_SUPABASE_SERVICE_ROLE_KEY"
 ```
+
+Then run this SQL in the Supabase SQL editor:
+
+```sql
+create table if not exists pathmark_users (
+  email text primary key,
+  role text not null default 'standard' check (role in ('standard', 'beta_tester', 'developer')),
+  status text not null default 'active' check (status in ('active', 'disabled')),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  last_login timestamptz,
+  notes text
+);
+
+create table if not exists pathmark_feature_flags (
+  key text primary key,
+  enabled boolean not null default true,
+  minimum_role text not null default 'standard' check (minimum_role in ('standard', 'beta_tester', 'developer')),
+  updated_at timestamptz not null default now(),
+  notes text
+);
+
+create table if not exists pathmark_audit_log (
+  id uuid primary key default gen_random_uuid(),
+  actor_email text,
+  action text not null,
+  target_email text,
+  details jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now()
+);
+
+insert into pathmark_feature_flags (key, enabled, minimum_role, notes)
+values
+  ('on_the_go_beta', true, 'beta_tester', 'Shows the On-the-go beta tab.'),
+  ('developer_panel', true, 'developer', 'Shows the Developer settings tab.')
+on conflict (key) do nothing;
+```
+
+Keep `[pathmark_access].developer_emails` in Streamlit secrets as an emergency bootstrap route even after Supabase is configured.
 
 ## On-the-go OAuth setup
 
@@ -91,6 +148,6 @@ The requested scope is the narrower Google `drive.file` permission. Private on-t
 
 Mac support has been removed for now.
 
-## v0.5.71 focus
+## v0.5.72 focus
 
-This release replaces Streamlit `st.login()` with a Pathmark-managed Google OAuth login flow, removing the dependency on Streamlit's Authlib auth route. It also removes the unnecessary download-only/status bar from the top of the hosted homepage while keeping beta/developer tools behind verified Google sign-in and role checks.
+This release introduces the Supabase access layer for hosted role management, feature flags, and audit logs. It removes the Google Sheet service-account role-store model while preserving Google login, Streamlit-secret bootstrap developer access, and user-owned Google Sheets for on-the-go sync.

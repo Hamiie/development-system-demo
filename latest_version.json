@@ -1,13 +1,13 @@
 {
   "app_name": "Pathmark",
-  "version": "v0.5.71",
+  "version": "v0.5.72",
   "release_date": "2026-05-31",
-  "windows_package": "Pathmark_Local_App_Windows_v0_5_71.zip",
+  "windows_package": "Pathmark_Local_App_Windows_v0_5_72.zip",
   "mac_package": "",
   "notes": [
-    "Fixed custom Google login verification after the browser returns from Google by using a signed OAuth state value rather than relying only on Streamlit session_state.",
-    "Applied the same signed-state fallback to the beta Google Sheets authorisation flow.",
-    "Kept the top status/download-only bar removed.",
-    "Beta/developer tools remain hidden unless a signed-in Google account has a verified email and the appropriate role."
+    "Added a Supabase-backed hosted access layer for long-term role management, feature flags, and audit logs.",
+    "Removed the service-account Google Sheet role-store model from the hosted Developer panel.",
+    "Developer role assignments can now be saved to Supabase when configured; bootstrap developer/beta lists in Streamlit secrets still work as fallback.",
+    "Clarified that Supabase is for hosted access control only and should not store Pathmark goals, routines, Workspace files, or on-the-go planning entries."
   ]
 }
