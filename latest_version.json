@@ -1,13 +1,13 @@
 {
   "app_name": "Pathmark",
-  "version": "v0.5.70",
+  "version": "v0.5.71",
   "release_date": "2026-05-31",
-  "windows_package": "Pathmark_Local_App_Windows_v0_5_70.zip",
+  "windows_package": "Pathmark_Local_App_Windows_v0_5_71.zip",
   "mac_package": "",
   "notes": [
-    "Hosted login now uses a Pathmark-managed Google OAuth flow instead of Streamlit st.login, avoiding the Authlib dependency issue.",
-    "Removed the download-only/status bar from the top of the hosted homepage.",
-    "Kept beta/developer tools hidden unless a signed-in Google account has a verified email and the appropriate role.",
-    "Google Sheets sync remains separate from login and stays behind the beta/developer gate."
+    "Fixed custom Google login verification after the browser returns from Google by using a signed OAuth state value rather than relying only on Streamlit session_state.",
+    "Applied the same signed-state fallback to the beta Google Sheets authorisation flow.",
+    "Kept the top status/download-only bar removed.",
+    "Beta/developer tools remain hidden unless a signed-in Google account has a verified email and the appropriate role."
   ]
 }

@@ -11,7 +11,7 @@ app/
   main.py
   assets/pathmark.png
 downloads/
-  Pathmark_Local_App_Windows_v0_5_70.zip
+  Pathmark_Local_App_Windows_v0_5_71.zip
 latest_version.json
 requirements.txt
 .streamlit/config.toml
@@ -91,6 +91,6 @@ The requested scope is the narrower Google `drive.file` permission. Private on-t
 
 Mac support has been removed for now.
 
-## v0.5.70 focus
+## v0.5.71 focus
 
 This release replaces Streamlit `st.login()` with a Pathmark-managed Google OAuth login flow, removing the dependency on Streamlit's Authlib auth route. It also removes the unnecessary download-only/status bar from the top of the hosted homepage while keeping beta/developer tools behind verified Google sign-in and role checks.

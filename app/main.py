@@ -7,6 +7,8 @@ import json
 import re
 import uuid
 import secrets
+import hmac
+import hashlib
 import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
@@ -160,11 +162,54 @@ def current_user() -> dict[str, Any]:
     }
 
 
+def oauth_state_secret() -> str:
+    """Return a stable secret for signing OAuth state values.
+
+    The hosted page cannot rely on Streamlit session_state surviving a full
+    external Google redirect in every deployment. Signed state values let
+    Pathmark verify that the callback originated from this app without storing
+    the state only in the in-memory session.
+    """
+    auth = _secret_section("auth")
+    secret = str(auth.get("cookie_secret", "") or auth.get("client_secret", "")).strip() if auth else ""
+    if not secret:
+        google_cfg = _secret_section("google_oauth")
+        secret = str(google_cfg.get("client_secret", "")).strip() if google_cfg else ""
+    return secret or "pathmark-development-only-state-secret"
+
+
+def make_signed_oauth_state(kind: str) -> str:
+    ts = str(int(datetime.now(timezone.utc).timestamp()))
+    nonce = secrets.token_urlsafe(24)
+    payload = f"{kind}:{ts}:{nonce}"
+    sig = hmac.new(oauth_state_secret().encode("utf-8"), payload.encode("utf-8"), hashlib.sha256).hexdigest()
+    return f"{payload}:{sig}"
+
+
+def verify_signed_oauth_state(state: str | None, kind: str, max_age_seconds: int = 900) -> bool:
+    if not state:
+        return False
+    parts = str(state).split(":")
+    if len(parts) != 4 or parts[0] != kind:
+        return False
+    payload = ":".join(parts[:3])
+    expected = hmac.new(oauth_state_secret().encode("utf-8"), payload.encode("utf-8"), hashlib.sha256).hexdigest()
+    if not hmac.compare_digest(expected, parts[3]):
+        return False
+    try:
+        age = int(datetime.now(timezone.utc).timestamp()) - int(parts[1])
+    except Exception:
+        return False
+    return 0 <= age <= max_age_seconds
+
+
 def login_auth_url() -> str | None:
     cfg = login_config()
     if not cfg:
         return None
-    state = "login:" + secrets.token_urlsafe(32)
+    state = make_signed_oauth_state("login")
+    # Also store it in session when possible. The signed value is the fallback
+    # used after the browser returns from Google.
     st.session_state["pathmark_login_state"] = state
     params = {
         "client_id": cfg["client_id"],
@@ -194,7 +239,7 @@ def handle_login_redirect() -> bool:
     if isinstance(error, list):
         error = error[0] if error else None
     expected_state = st.session_state.get("pathmark_login_state")
-    if not expected_state and not (state and str(state).startswith("login:")):
+    if not (state and str(state).startswith("login:")):
         return False
     if error:
         st.session_state.pop("pathmark_login_state", None)
@@ -203,7 +248,9 @@ def handle_login_redirect() -> bool:
         return True
     if not code:
         return False
-    if not state or not expected_state or not secrets.compare_digest(str(expected_state), str(state)):
+    session_match = bool(expected_state and secrets.compare_digest(str(expected_state), str(state)))
+    signed_match = verify_signed_oauth_state(str(state), "login")
+    if not (session_match or signed_match):
         st.session_state.pop("pathmark_login_state", None)
         st.query_params.clear()
         st.error("Google login could not be verified. Please try again.")
@@ -596,11 +643,12 @@ def handle_google_oauth_redirect() -> None:
     if not code:
         return
     expected_state = st.session_state.get("google_oauth_state")
-    # The hosted page may also use Streamlit's own login/OIDC flow. Only handle
-    # callbacks that were started by Pathmark's Google Sheets connector.
-    if not expected_state:
+    # Only handle callbacks that were started by Pathmark's Google Sheets connector.
+    if not (state and str(state).startswith("sheets:")):
         return
-    if not state or not secrets.compare_digest(str(expected_state), str(state)):
+    session_match = bool(expected_state and secrets.compare_digest(str(expected_state), str(state)))
+    signed_match = verify_signed_oauth_state(str(state), "sheets")
+    if not (session_match or signed_match):
         st.session_state.pop("google_oauth_state", None)
         st.query_params.clear()
         st.error("Google authorisation could not be verified. Please reconnect from the On the go tab.")
@@ -628,7 +676,7 @@ def google_auth_url() -> str | None:
     try:
         from google_auth_oauthlib.flow import Flow  # type: ignore
         flow = Flow.from_client_config(cfg["client_config"], scopes=GOOGLE_SHEETS_SCOPES, redirect_uri=cfg["redirect_uri"])
-        state_seed = secrets.token_urlsafe(32)
+        state_seed = make_signed_oauth_state("sheets")
         auth_url, state = flow.authorization_url(
             access_type="online",
             include_granted_scopes="true",
